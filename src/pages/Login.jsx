@@ -1,90 +1,28 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Login() {
-  const [walletAddress, setWalletAddress] = useState(null);
+export default function Login() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (window.solana && window.solana.isPhantom) {
-      console.log("Phantom detected");
-    }
-  }, []);
-
-  const connectWallet = async () => {
-    try {
-      if (!window.solana) {
-        alert("Phantom wallet not found! Install it.");
-        return;
-      }
-
-      const response = await window.solana.connect();
-      const publicKey = response.publicKey.toString();
-
-      setWalletAddress(publicKey);
-
-      // Redirect after successful connection
-      setTimeout(() => {
-        navigate("/chat");
-      }, 1000);
-
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(135deg, #0f172a, #1e3a8a)"
-      }}
-    >
-      <div
-        style={{
-          width: "380px",
-          padding: "30px",
-          borderRadius: "16px",
-          backdropFilter: "blur(15px)",
-          backgroundColor: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-          color: "white",
-          textAlign: "center"
-        }}
-      >
-        <h1>AI Study Buddy 🤖</h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 to-blue-900 flex items-center justify-center">
+      <div className="bg-white/10 backdrop-blur-lg p-10 rounded-2xl shadow-2xl w-[420px] text-center border border-white/20">
 
-        {!walletAddress ? (
-          <button
-            onClick={connectWallet}
-            style={{
-              marginTop: "20px",
-              padding: "10px 20px",
-              borderRadius: "25px",
-              border: "none",
-              backgroundColor: "#2563eb",
-              color: "white",
-              cursor: "pointer",
-              fontWeight: "bold"
-            }}
-          >
-            Connect Phantom Wallet
-          </button>
-        ) : (
-          <div style={{ marginTop: "20px" }}>
-            <p>Connected:</p>
-            <strong>{walletAddress.slice(0, 6)}...
-              {walletAddress.slice(-4)}
-            </strong>
-          </div>
-        )}
+        <h1 className="text-4xl font-bold text-white mb-3">
+          AI Study Buddy 🤖
+        </h1>
+
+        <p className="text-gray-200 mb-8">
+          Your Personal AI Learning Companion
+        </p>
+
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl transition duration-300 hover:scale-105 shadow-lg"
+        >
+          Enter Dashboard
+        </button>
+
       </div>
     </div>
   );
 }
-
-export default Login;

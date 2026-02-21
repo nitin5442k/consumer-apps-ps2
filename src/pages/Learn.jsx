@@ -1,158 +1,63 @@
-import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Learn() {
-  const [darkMode, setDarkMode] = useState(true);
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState([]);
+export default function Learn() {
+  const navigate = useNavigate();
 
-  const chatEndRef = useRef(null);
-  useEffect(()=> {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  },[message]);
-
-  const handleSend = () => {
-    if (message.trim() === "") return;
-
-    const userMessage = message;
-
-    // Add user message
-    setMessages(prev => [...prev, { sender: "user", text: userMessage }]);
-
-    // Clear input immediately
-    setMessage("");
-
-    // Fake AI reply
-    setTimeout(() => {
-      setMessages(prev => [
-        ...prev,
-        { sender: "ai", text: "This is a sample AI response 🤖" }
-      ]);
-    }, 800);
-  };
+  const courses = [
+    {
+      title: "Fundamental of Science",
+      description: "Learn the basics of Science and understand the principles of the world.",
+      level: "Beginner",
+    },
+    {
+      title: "Mathematics",
+      description: "Mathematics which never bores you.",
+      level: "Intermediate",
+    },
+    {
+      title: "Computer and Technology",
+      description: "Understand using MS office with Copilot.",
+      level: "Advanced",
+    },
+    {
+      title: "English Literature",
+      description: "Learn different stories and words of the Poet.",
+      level: "Beginner",
+    },
+  ];
 
   return (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "100vh",
-      background: darkMode
-        ? "linear-gradient(135deg, #0f172a, #1e3a8a)"
-        : "#f3f4f6",
-      transition: "0.3s ease"
-    }}
-  >
-    <div
-      style={{
-        width: "420px",
-        backdropFilter: "blur(12px)",
-        backgroundColor: darkMode
-          ? "rgba(255,255,255,0.08)"
-          : "white",
-        borderRadius: "16px",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
-        display: "flex",
-        flexDirection: "column",
-        padding: "20px",
-        color: darkMode ? "white" : "black",
-        border: darkMode
-          ? "1px solid rgba(255,255,255,0.1)"
-          : "none"
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <h2>AI Study Buddy 🤖</h2>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
-          style={{
-            background: "none",
-            border: "none",
-            color: darkMode ? "white" : "black",
-            cursor: "pointer"
-          }}
-        >
-          {darkMode ? "☀️" : "🌙"}
-        </button>
-      </div>
+    <div className="min-h-screen bg-gray-100 p-10">
+      <h1 className="text-3xl font-bold mb-8">Explore Courses 📚</h1>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          margin: "15px 0",
-          padding: "10px",
-          borderRadius: "12px",
-          backgroundColor: darkMode
-            ? "rgba(255,255,255,0.05)"
-            : "#f9fafb"
-        }}
-      >
-        {messages.map((msg, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {courses.map((course, index) => (
           <div
             key={index}
-            style={{
-              alignSelf: msg.sender === "user" ? "flex-end" : "flex-start",
-              backgroundColor:
-                msg.sender === "user"
-                  ? "#2563eb"
-                  : darkMode
-                  ? "rgba(255,255,255,0.1)"
-                  : "#e5e7eb",
-              padding: "8px 14px",
-              borderRadius: "20px",
-              marginBottom: "8px",
-              maxWidth: "70%",
-              color:
-                msg.sender === "user" || darkMode
-                  ? "white"
-                  : "black"
-            }}
+            className="bg-white rounded-xl shadow-md p-6 hover:shadow-xl transition duration-300"
           >
-            {msg.text}
+            <h2 className="text-xl font-semibold mb-2">
+              {course.title}
+            </h2>
+
+            <p className="text-gray-600 mb-4">
+              {course.description}
+            </p>
+
+            <span className="text-sm bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
+              {course.level}
+            </span>
+
+            <button
+              onClick={() => navigate(`/course/${course.title}`)}
+              className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg transition"
+            >
+              Start Learning
+            </button>
+
           </div>
         ))}
       </div>
-
-      <div style={{ display: "flex", gap: "8px" }}>
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSend();
-          }}
-          placeholder="Ask something..."
-          style={{
-            flex: 1,
-            padding: "10px",
-            borderRadius: "20px",
-            border: "none",
-            outline: "none",
-            backgroundColor: darkMode
-              ? "rgba(255,255,255,0.1)"
-              : "white",
-            color: darkMode ? "white" : "black"
-          }}
-        />
-
-        <button
-          onClick={handleSend}
-          style={{
-            padding: "10px 18px",
-            borderRadius: "20px",
-            border: "none",
-            backgroundColor: "#2563eb",
-            color: "white",
-            cursor: "pointer"
-          }}
-        >
-          Send
-        </button>
-      </div>
     </div>
-  </div>
-);
+  );
 }
-
-export default Learn;
