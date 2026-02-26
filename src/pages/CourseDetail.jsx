@@ -4,176 +4,128 @@ import { useState } from "react";
 export default function CourseDetail() {
   const { title } = useParams();
 
-  const courseVideos = {
-    "Fundamental of Science": [
-      "What is Science?",
-      "Scientific Methods",
-      "Laws of Nature",
-      "Energy & Matter",
-      "Final Review",
-    ],
-    "Mathematics": [
-      "Introduction to Algebra",
-      "Geometry Basics",
-      "Trigonometry",
-      "Calculus Intro",
-      "Practice Problems",
-    ],
-    "Computer and Technology": [
-      "MS Word Basics",
-      "MS Excel Essentials",
-      "PowerPoint Mastery",
-      "Copilot Introduction",
-      "Tech Summary",
-    ],
-    "English Literature": [
-      "Poetry Introduction",
-      "Classic Stories",
-      "Shakespeare Basics",
-      "Modern Literature",
-      "Final Reflection",
-    ],
-  };
+  const [currentLesson, setCurrentLesson] = useState(null);
+  const [question, setQuestion] = useState("");
+  const [response, setResponse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const videos = courseVideos[title] || [];
+  const lessons = [
+    "What is Science?",
+    "Scientific Methods",
+    "Laws of Nature",
+    "Energy & Matter",
+    "Final Review",
+  ];
 
-  const [currentVideo, setCurrentVideo] = useState(videos[0] || "");
-  const [completed, setCompleted] = useState([]);
-  const [showWarning, setShowWarning] = useState(false);
-  const [maxUnlockedIndex, setMaxUnlockedIndex] = useState(0);
-  const [pendingIndex, setPendingIndex] = useState(null);
+  const askAI = async () => {
+    if (!question || !currentLesson) return;
 
-  const markCompleted = (video) => {
-  if (!completed.includes(video)) {
-    setCompleted([...completed, video]);
+    setLoading(true);
+    setResponse("");
 
-    const currentIndex = videos.indexOf(video);
+    try {
+      const res = await fetch("http://localhost:5000/api/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          courseTitle: title,
+          lesson: currentLesson,
+          question: question,
+        }),
+      });
 
-    if (currentIndex > maxUnlockedIndex) {
-      setMaxUnlockedIndex(currentIndex);
+      const data = await res.json();
+      setResponse(data.answer);
+    } catch (error) {
+      setResponse("Error contacting AI tutor.");
     }
-  }
-};
 
-  const progress =
-    videos.length > 0
-      ? (completed.length / videos.length) * 100
-      : 0;
+    setLoading(false);
+    setQuestion("");
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
-      <h1 className="text-3xl font-bold mb-4">{title}</h1>
-
-      {/* Progress Bar */}
-      <div className="w-full bg-gray-300 rounded-full h-3 mb-8">
-        <div
-          className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <h1 className="text-3xl font-bold mb-6">{title}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Video Section */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow">
-          <h2 className="text-xl font-semibold mb-4">
-            {currentVideo}
-          </h2>
-
-          <div className="h-64 bg-gray-200 flex items-center justify-center rounded-lg mb-4">
-            🎥 Video Player Placeholder
-          </div>
-
-          <button
-            onClick={() => markCompleted(currentVideo)}
-            disabled={completed.includes(currentVideo)}
-            className={`px-4 py-2 rounded-lg transition ${
-              completed.includes(currentVideo)
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 hover:bg-green-700 text-white"
-            }`}
-          >
-            {completed.includes(currentVideo)
-              ? "Completed"
-              : "Mark as Completed"}
-          </button>
-        </div>
 
         {/* Lesson List */}
         <div className="bg-white p-6 rounded-xl shadow">
           <h3 className="text-lg font-semibold mb-4">
-            Course Lessons
+            Lessons
           </h3>
 
           <ul className="space-y-3">
-            {videos.map((video, index) => (
+            {lessons.map((lesson, index) => (
               <li
                 key={index}
                 onClick={() => {
-                  if (
-                    index ===0 ||
-                    index <= maxUnlockedIndex ||
-                    completed.includes(videos[index - 1])
-                    
-                  ) {
-                    setCurrentVideo(video);
-                  } else {
-                    setPendingIndex(index);
-                    setShowWarning(true);
-                  }
+                  setCurrentLesson(lesson);
+                  setResponse("");
                 }}
-                className={`p-3 rounded-lg cursor-pointer flex justify-between items-center ${
-                  currentVideo === video
+                className={`p-3 rounded-lg cursor-pointer ${
+                  currentLesson === lesson
                     ? "bg-indigo-100"
                     : "hover:bg-gray-100"
                 }`}
               >
-                <span>{video}</span>
-
-                {completed.includes(video) && (
-                  <span className="text-green-600 font-bold">
-                    ✓
-                  </span>
-                )}
+                {lesson}
               </li>
             ))}
           </ul>
         </div>
-      </div>
 
-      {/* Warning Modal */}
-      {showWarning && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl shadow-xl w-96">
-            <h2 className="text-lg font-semibold mb-4">
-              Complete Previous Lesson
-            </h2>
+        {/* AI Tutor Section */}
+        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow flex flex-col">
 
-            <p className="mb-6 text-gray-600">
-              You must complete the previous lecture or pass
-              the assessment to unlock this lesson.
-            </p>
-
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => setShowWarning(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg"
-              >
-                Go Back
-              </button>
-
-              <button
-                onClick={() => {
-                  setMaxUnlockedIndex(pendingIndex);
-                  setShowWarning(false);
-                }}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg"
-              >
-                Unlock via Quiz
-              </button>
+          {!currentLesson ? (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              Select a lesson to start learning 🤖
             </div>
-          </div>
+          ) : (
+            <>
+              <h2 className="text-xl font-semibold mb-4">
+                AI Tutor — {currentLesson}
+              </h2>
+
+              {/* Response Area */}
+              <div className="flex-1 bg-gray-50 p-4 rounded-lg mb-4 overflow-y-auto">
+                {loading ? (
+                  <p className="text-gray-500">Thinking...</p>
+                ) : response ? (
+                  <p className="whitespace-pre-line">{response}</p>
+                ) : (
+                  <p className="text-gray-400">
+                    Ask a question about this lesson.
+                  </p>
+                )}
+              </div>
+
+              {/* Input Area */}
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Ask something..."
+                  className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+
+                <button
+                  onClick={askAI}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 rounded-lg transition"
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      )}
+
+      </div>
     </div>
   );
 }
