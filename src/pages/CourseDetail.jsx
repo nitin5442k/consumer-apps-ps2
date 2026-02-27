@@ -49,9 +49,9 @@ export default function CourseDetail() {
   const progress =
     lessons.length > 0
       ? Math.min(
-          (completedLessons.length / lessons.length) * 100,
-          100
-        )
+        (completedLessons.length / lessons.length) * 100,
+        100
+      )
       : 0;
 
   // 🔥 SEND MESSAGE TO BACKEND (Gemini)
@@ -80,6 +80,10 @@ export default function CourseDetail() {
           question: userMessage,
         }),
       });
+
+      if (!res.ok) {
+        throw new Error("AI request failed");
+      }
 
       const data = await res.json();
 
@@ -140,18 +144,16 @@ export default function CourseDetail() {
           {messages.map((msg, i) => (
             <div
               key={i}
-              className={`mb-3 ${
-                msg.role === "user"
+              className={`mb-3 ${msg.role === "user"
                   ? "text-right"
                   : "text-left"
-              }`}
+                }`}
             >
               <span
-                className={`inline-block px-3 py-2 rounded-lg ${
-                  msg.role === "user"
+                className={`inline-block px-3 py-2 rounded-lg ${msg.role === "user"
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-300"
-                }`}
+                  }`}
               >
                 {msg.text}
               </span>
@@ -185,11 +187,10 @@ export default function CourseDetail() {
           <button
             onClick={() => setShowQuiz(true)}
             disabled={completedLessons.includes(currentLesson)}
-            className={`px-4 py-2 rounded-lg ${
-              completedLessons.includes(currentLesson)
+            className={`px-4 py-2 rounded-lg ${completedLessons.includes(currentLesson)
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-green-600 text-white"
-            }`}
+              }`}
           >
             {completedLessons.includes(currentLesson)
               ? "Lesson Completed"
