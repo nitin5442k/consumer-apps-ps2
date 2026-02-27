@@ -1,50 +1,54 @@
-const learningRoutes = require('./routes/learningRoutes');
-const connectDB = require('./utils/db');
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
+require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
+const learningRoutes = require("./routes/learningRoutes");
+// const connectDB = require("./utils/db");  // 🔥 Disabled for now
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173'
-}));
-app.use('/api', learningRoutes);
+console.log("===================================");
+console.log("AI STUDY BUDDY BACKEND SERVER");
+
+// 🔥 1. Body parsing middleware MUST come first
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        message: 'AI Study Buddy Backend is running!',
-        timestamp: new Date().toISOString(),
-        environment: process.env.NODE_ENV,
-        solanaNetwork: process.env.SOLANA_NETWORK
-    });
+// 🔥 2. CORS
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  })
+);
+
+// 🔥 3. Routes
+app.use("/api", learningRoutes);
+
+// 🔥 4. Health Check
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "Backend is running!",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// Test endpoint
-app.get('/api/test', (req, res) => {
-    res.json({
-        message: 'Backend API is working!',
-        geminiConfigured: !!process.env.GEMINI_API_KEY,
-        nftStorageConfigured: !!process.env.NFT_STORAGE_API_KEY,
-        solanaConfigured: !!process.env.WALLET_KEYPAIR_PATH
-    });
+// 🔥 5. Test Route
+app.get("/api/test", (req, res) => {
+  res.json({
+    message: "Backend API is working!",
+    geminiConfigured: !!process.env.GEMINI_API_KEY,
+  });
 });
 
-// Start server
-connectDB();
+// 🔥 6. Start Server
+// connectDB();  // Mongo temporarily disabled
+
 app.listen(PORT, () => {
-    console.log("===================================");
-    console.log("AI STUDY BUDDY BACKEND SERVER");
-    console.log("Server running on http://localhost:" + PORT);
-    console.log("Health: http://localhost:" + PORT + "/health");
-    console.log("Test: http://localhost:" + PORT + "/api/test");
-    console.log("Environment:", process.env.NODE_ENV);
-    console.log("Solana:", process.env.SOLANA_NETWORK);
-    console.log("===================================");
+  console.log("Server running on http://localhost:" + PORT);
+  console.log("Health: http://localhost:" + PORT + "/health");
+  console.log("Test: http://localhost:" + PORT + "/api/test");
+  console.log("Gemini Key Loaded:", !!process.env.GEMINI_API_KEY);
+  console.log("===================================");
 });

@@ -1,31 +1,40 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Course = require('../models/course');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// Get all courses
-router.get('/courses', async (req, res) => {
-    try {
-        const courses = await Course.find();
-        res.json(courses);
-    } catch (err) {
-        res.status(500).json({ error: "Failed to fetch courses" });
-    }
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+router.post("/ask", async (req, res) => {
+  try {
+    console.log("Incoming body:", req.body);
+
+    const { courseTitle, lesson, question } = req.body;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-pro",
+    });
+
+    const prompt = `
+Course: ${courseTitle}
+Lesson: ${lesson}
+Student question: ${question}
+Explain simply.
+`;
+
+    const result = await model.generateContent(prompt);
+
+    console.log("Raw Gemini result:", result);
+
+    const response = await result.response;
+    const text = response.text();
+
+    console.log("Gemini text:", text);
+
+    res.json({ answer: text });
+
+  } catch (error) {
+    console.error("Gemini ERROR:", error);
+    res.status(500).json({ error: "AI failed" });
+  }
 });
-
-// Get course by title
-router.get('/courses/:title', async (req, res) => {
-    try {
-        const title = decodeURIComponent(req.params.title);
-        const course = await Course.findOne({ title });
-
-        if (!course) {
-            return res.status(404).json({ error: "Course not found" });
-        }
-
-        res.json(course);
-    } catch (err) {
-        res.status(500).json({ error: "Server error" });
-    }
-});
-
 module.exports = router;

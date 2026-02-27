@@ -1,27 +1,72 @@
-import { useParams } from "react-router-dom";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 
 export default function CourseDetail() {
   const { title } = useParams();
 
-  const [currentLesson, setCurrentLesson] = useState(null);
-  const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("");
+  const courseLessons = {
+    "Fundamental of Science": [
+      "What is Science?",
+      "Scientific Method",
+      "Laws of Nature",
+      "Energy & Matter",
+      "Final Understanding",
+    ],
+    Mathematics: [
+      "Algebra Basics",
+      "Geometry",
+      "Trigonometry",
+      "Calculus Intro",
+      "Final Practice",
+    ],
+    "Computer and Technology": [
+      "MS Word",
+      "Excel",
+      "PowerPoint",
+      "Copilot",
+      "Final Tech Concepts",
+    ],
+    "English Literature": [
+      "Poetry",
+      "Classic Stories",
+      "Shakespeare",
+      "Modern Literature",
+      "Final Reflection",
+    ],
+  };
+
+  const lessons = courseLessons[title] || [];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [completedLessons, setCompletedLessons] = useState([]);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const lessons = [
-    "What is Science?",
-    "Scientific Methods",
-    "Laws of Nature",
-    "Energy & Matter",
-    "Final Review",
-  ];
+  const currentLesson = lessons[currentIndex];
 
-  const askAI = async () => {
-    if (!question || !currentLesson) return;
+  const progress =
+    lessons.length > 0
+      ? Math.min(
+          (completedLessons.length / lessons.length) * 100,
+          100
+        )
+      : 0;
 
+  // 🔥 SEND MESSAGE TO BACKEND (Gemini)
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = input;
+
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", text: userMessage },
+    ]);
+
+    setInput("");
     setLoading(true);
-    setResponse("");
 
     try {
       const res = await fetch("http://localhost:5000/api/ask", {
@@ -32,100 +77,161 @@ export default function CourseDetail() {
         body: JSON.stringify({
           courseTitle: title,
           lesson: currentLesson,
-          question: question,
+          question: userMessage,
         }),
       });
 
       const data = await res.json();
-      setResponse(data.answer);
-    } catch (error) {
-      setResponse("Error contacting AI tutor.");
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: data.answer || "No response from AI." },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "ai", text: "AI error. Try again." },
+      ]);
     }
 
     setLoading(false);
-    setQuestion("");
+  };
+
+  // 🔥 QUIZ PASS LOGIC
+  const handleQuizPass = () => {
+    if (!completedLessons.includes(currentLesson)) {
+      setCompletedLessons((prev) => [...prev, currentLesson]);
+    }
+
+    setShowQuiz(false);
+
+    if (currentIndex < lessons.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setMessages([]);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
-      <h1 className="text-3xl font-bold mb-6">{title}</h1>
+      <h1 className="text-3xl font-bold mb-4">{title}</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Progress Bar */}
+      <div className="w-full bg-gray-300 rounded-full h-3 mb-8">
+        <div
+          className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
-        {/* Lesson List */}
-        <div className="bg-white p-6 rounded-xl shadow">
-          <h3 className="text-lg font-semibold mb-4">
-            Lessons
-          </h3>
+      {/* AI Tutor Section */}
+      <div className="bg-white p-6 rounded-xl shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">
+          Lesson {currentIndex + 1}: {currentLesson}
+        </h2>
 
-          <ul className="space-y-3">
-            {lessons.map((lesson, index) => (
-              <li
-                key={index}
-                onClick={() => {
-                  setCurrentLesson(lesson);
-                  setResponse("");
-                }}
-                className={`p-3 rounded-lg cursor-pointer ${
-                  currentLesson === lesson
-                    ? "bg-indigo-100"
-                    : "hover:bg-gray-100"
+        {/* Chat Window */}
+        <div className="h-72 overflow-y-auto bg-gray-100 p-4 rounded-lg mb-4">
+          {messages.length === 0 && (
+            <p className="text-gray-500">
+              Ask AI anything about this lesson...
+            </p>
+          )}
+
+          {messages.map((msg, i) => (
+            <div
+              key={i}
+              className={`mb-3 ${
+                msg.role === "user"
+                  ? "text-right"
+                  : "text-left"
+              }`}
+            >
+              <span
+                className={`inline-block px-3 py-2 rounded-lg ${
+                  msg.role === "user"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-300"
                 }`}
               >
-                {lesson}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* AI Tutor Section */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow flex flex-col">
-
-          {!currentLesson ? (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              Select a lesson to start learning 🤖
+                {msg.text}
+              </span>
             </div>
-          ) : (
-            <>
-              <h2 className="text-xl font-semibold mb-4">
-                AI Tutor — {currentLesson}
-              </h2>
+          ))}
 
-              {/* Response Area */}
-              <div className="flex-1 bg-gray-50 p-4 rounded-lg mb-4 overflow-y-auto">
-                {loading ? (
-                  <p className="text-gray-500">Thinking...</p>
-                ) : response ? (
-                  <p className="whitespace-pre-line">{response}</p>
-                ) : (
-                  <p className="text-gray-400">
-                    Ask a question about this lesson.
-                  </p>
-                )}
-              </div>
-
-              {/* Input Area */}
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  placeholder="Ask something..."
-                  className="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-
-                <button
-                  onClick={askAI}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 rounded-lg transition"
-                >
-                  Send
-                </button>
-              </div>
-            </>
+          {loading && (
+            <p className="text-gray-500">AI is thinking...</p>
           )}
         </div>
 
+        {/* Input Section */}
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask AI..."
+            className="flex-1 border p-2 rounded-lg"
+          />
+          <button
+            onClick={handleSend}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg"
+          >
+            Send
+          </button>
+        </div>
+
+        {/* Quiz Button */}
+        <div className="mt-6 text-right">
+          <button
+            onClick={() => setShowQuiz(true)}
+            disabled={completedLessons.includes(currentLesson)}
+            className={`px-4 py-2 rounded-lg ${
+              completedLessons.includes(currentLesson)
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-600 text-white"
+            }`}
+          >
+            {completedLessons.includes(currentLesson)
+              ? "Lesson Completed"
+              : "Take Quiz"}
+          </button>
+        </div>
       </div>
+
+      {/* Quiz Modal */}
+      {showQuiz && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-96">
+            <h2 className="text-lg font-semibold mb-4">
+              Quick Quiz
+            </h2>
+
+            <p className="mb-6">
+              (Placeholder quiz — assume user scored 70%)
+            </p>
+
+            <button
+              onClick={handleQuizPass}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg"
+            >
+              Submit Quiz
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NFT Certificate Section */}
+      {progress === 100 && (
+        <div className="bg-yellow-100 p-6 rounded-xl shadow text-center">
+          <h2 className="text-2xl font-bold mb-4">
+            🎓 All Lessons Completed!
+          </h2>
+
+          <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg">
+            Claim NFT Certificate (Solana)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
