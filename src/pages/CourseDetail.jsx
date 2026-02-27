@@ -41,6 +41,13 @@ export default function CourseDetail() {
     );
   }
   const currentLesson = lessons[currentIndex] || "";
+  const progress =
+    lessons.length > 0
+      ? Math.min(
+        (completedLessons.length / lessons.length) * 100,
+        100
+      )
+      : 0;
 
 
   // 🔥 SEND MESSAGE TO BACKEND (Gemini)

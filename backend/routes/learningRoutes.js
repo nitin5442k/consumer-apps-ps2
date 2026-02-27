@@ -74,4 +74,30 @@ Instructions:
     }
 });
 
+
+// GET quiz (without correct answers)
+router.get("/quiz/:title", async (req, res) => {
+    try {
+        const title = decodeURIComponent(req.params.title);
+
+        const course = await Course.findOne({ title });
+
+        if (!course || !course.quiz || course.quiz.length === 0) {
+            return res.status(404).json({ error: "Quiz not found" });
+        }
+
+        // Remove correctAnswer before sending
+        const safeQuiz = course.quiz.map(q => ({
+            question: q.question,
+            options: q.options
+        }));
+
+        res.json(safeQuiz);
+
+    } catch (err) {
+        console.error("Quiz fetch error:", err);
+        res.status(500).json({ error: "Failed to fetch quiz" });
+    }
+});
+
 module.exports = router;
