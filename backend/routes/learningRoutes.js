@@ -7,6 +7,24 @@ if (!process.env.GEMINI_API_KEY) {
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const Course = require("../models/course");
+
+// Get course by title
+router.get("/courses/:title", async (req, res) => {
+    try {
+        const title = decodeURIComponent(req.params.title);
+        const course = await Course.findOne({ title });
+
+        if (!course) {
+            return res.status(404).json({ error: "Course not found" });
+        }
+
+        res.json(course);
+    } catch (err) {
+        console.error("Course fetch error:", err);
+        res.status(500).json({ error: "Failed to fetch course" });
+    }
+});
 
 // 🔥 POST /api/ask
 router.post("/ask", async (req, res) => {
@@ -18,10 +36,9 @@ router.post("/ask", async (req, res) => {
                 error: "Missing courseTitle, lesson, or question",
             });
         }
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const model = genAI.getGenerativeModel({
-            model: "gemini-pro",
-        });
+
 
         // 🔥 Structured Tutor Prompt
         const prompt = `

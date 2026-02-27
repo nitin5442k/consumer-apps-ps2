@@ -1,58 +1,47 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function CourseDetail() {
   const { title } = useParams();
 
-  const courseLessons = {
-    "Fundamental of Science": [
-      "What is Science?",
-      "Scientific Method",
-      "Laws of Nature",
-      "Energy & Matter",
-      "Final Understanding",
-    ],
-    Mathematics: [
-      "Algebra Basics",
-      "Geometry",
-      "Trigonometry",
-      "Calculus Intro",
-      "Final Practice",
-    ],
-    "Computer and Technology": [
-      "MS Word",
-      "Excel",
-      "PowerPoint",
-      "Copilot",
-      "Final Tech Concepts",
-    ],
-    "English Literature": [
-      "Poetry",
-      "Classic Stories",
-      "Shakespeare",
-      "Modern Literature",
-      "Final Reflection",
-    ],
-  };
-
-  const lessons = courseLessons[title] || [];
-
+  const [lessons, setLessons] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [completedLessons, setCompletedLessons] = useState([]);
   const [showQuiz, setShowQuiz] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const res = await fetch(
+          `http://localhost:5000/api/courses/${encodeURIComponent(title)}`
+        );
 
-  const currentLesson = lessons[currentIndex];
+        if (!res.ok) {
+          throw new Error("Failed to fetch course");
+        }
 
-  const progress =
-    lessons.length > 0
-      ? Math.min(
-        (completedLessons.length / lessons.length) * 100,
-        100
-      )
-      : 0;
+        const data = await res.json();
+        setLessons(data.lessons || []);
+        setCurrentIndex(0);
+      } catch (err) {
+        console.error("Course fetch error:", err);
+      }
+    };
+
+    fetchCourse();
+  }, [title]);
+  if (lessons.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading course...</p>
+      </div>
+    );
+  }
+  const currentLesson = lessons[currentIndex] || "";
+
 
   // 🔥 SEND MESSAGE TO BACKEND (Gemini)
   const handleSend = async () => {
@@ -81,8 +70,11 @@ export default function CourseDetail() {
         }),
       });
 
+      // 🔥 SHOW REAL ERROR
       if (!res.ok) {
-        throw new Error("AI request failed");
+        const errorText = await res.text();
+        console.error("Backend error response:", errorText);
+        throw new Error(errorText);
       }
 
       const data = await res.json();
@@ -91,15 +83,18 @@ export default function CourseDetail() {
         ...prev,
         { role: "ai", text: data.answer || "No response from AI." },
       ]);
+
     } catch (err) {
+      console.error("Frontend catch error:", err);
       setMessages((prev) => [
         ...prev,
-        { role: "ai", text: "AI error. Try again." },
+        { role: "ai", text: `Error: ${err.message}` },
       ]);
     }
 
     setLoading(false);
   };
+
 
   // 🔥 QUIZ PASS LOGIC
   const handleQuizPass = () => {
@@ -145,14 +140,14 @@ export default function CourseDetail() {
             <div
               key={i}
               className={`mb-3 ${msg.role === "user"
-                  ? "text-right"
-                  : "text-left"
+                ? "text-right"
+                : "text-left"
                 }`}
             >
               <span
                 className={`inline-block px-3 py-2 rounded-lg ${msg.role === "user"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-300"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-300"
                   }`}
               >
                 {msg.text}
@@ -188,8 +183,8 @@ export default function CourseDetail() {
             onClick={() => setShowQuiz(true)}
             disabled={completedLessons.includes(currentLesson)}
             className={`px-4 py-2 rounded-lg ${completedLessons.includes(currentLesson)
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-green-600 text-white"
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 text-white"
               }`}
           >
             {completedLessons.includes(currentLesson)
