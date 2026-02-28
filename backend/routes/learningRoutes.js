@@ -137,5 +137,15 @@ router.post('/quiz/submit', async (req, res) => {
         res.status(500).json({ error: "internal server error" });
     }
 });
+router.post('/mint', (req, res) => {
+
+    setTimeout(() => {
+        res.json({
+            success: true,
+            transactionSignature: "demo_transaction_signature",
+            explorerLink: "https://explorer.solana.com/?cluster=devnet"
+        });
+    }, 2500);
+});
 
 module.exports = router;
