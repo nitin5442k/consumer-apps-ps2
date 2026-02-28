@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const learningRoutes = require("./routes/learningRoutes");
-const connectDB = require("./utils/db");  // 🔥 Disabled for now
+const connectDB = require("./utils/db");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,21 +11,21 @@ const PORT = process.env.PORT || 5000;
 console.log("===================================");
 console.log("AI STUDY BUDDY BACKEND SERVER");
 
-// 🔥 1. Body parsing middleware MUST come first
+// body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 🔥 2. CORS
+// cors configuration
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
   })
 );
 
-// 🔥 3. Routes
+// routes
 app.use("/api", learningRoutes);
 
-// 🔥 4. Health Check
+// health check endpoint
 app.get("/health", (req, res) => {
   res.json({
     status: "ok",
@@ -34,7 +34,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-// 🔥 5. Test Route
+// test route
 app.get("/api/test", (req, res) => {
   res.json({
     message: "Backend API is working!",
@@ -42,8 +42,7 @@ app.get("/api/test", (req, res) => {
   });
 });
 
-
-connectDB();  // Mongo temporarily disabled
+connectDB();
 
 app.listen(PORT, () => {
   console.log("Server running on http://localhost:" + PORT);

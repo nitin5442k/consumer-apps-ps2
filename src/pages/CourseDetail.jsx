@@ -13,7 +13,6 @@ export default function CourseDetail() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Removed the stray "s" that was right here!
   const [walletAddress, setWalletAddress] = useState(null);
   const [mintLoading, setMintLoading] = useState(false);
   const [mintResult, setMintResult] = useState(null);
@@ -24,12 +23,12 @@ export default function CourseDetail() {
         const res = await fetch(
           `http://localhost:5000/api/courses/${encodeURIComponent(title)}`
         );
-        if (!res.ok) throw new Error("Failed to fetch course");
+        if (!res.ok) throw new Error("failed to fetch course");
         const data = await res.json();
         setLessons(data.lessons || []);
         setCurrentIndex(0);
       } catch (err) {
-        console.error("Course fetch error:", err);
+        console.error("course fetch error:", err);
       }
     };
     fetchCourse();
@@ -48,7 +47,7 @@ export default function CourseDetail() {
     ? Math.min((completedLessons.length / lessons.length) * 100, 100)
     : 0;
 
-  // 🔥 SEND MESSAGE TO BACKEND (Gemini)
+  // handle messaging with gemini backend
   const handleSend = async () => {
     if (!input.trim()) return;
     const userMessage = input;
@@ -73,14 +72,14 @@ export default function CourseDetail() {
       }
 
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "ai", text: data.answer || "No response from AI." }]);
+      setMessages((prev) => [...prev, { role: "ai", text: data.answer || "no response from ai." }]);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "ai", text: `Error: ${err.message}` }]);
+      setMessages((prev) => [...prev, { role: "ai", text: `error: ${err.message}` }]);
     }
     setLoading(false);
   };
 
-  // 🔥 QUIZ PASS LOGIC
+  // handle quiz completion and progress
   const handleQuizPass = () => {
     if (!completedLessons.includes(currentLesson)) {
       setCompletedLessons((prev) => [...prev, currentLesson]);
@@ -98,15 +97,15 @@ export default function CourseDetail() {
         const response = await window.solana.connect();
         setWalletAddress(response.publicKey.toString());
       } catch (err) {
-        console.error("Connection cancelled");
+        console.error("connection cancelled");
       }
     } else {
-      alert("Please install Phantom Wallet!");
+      alert("please install phantom wallet!");
     }
   };
 
   const handleMint = async () => {
-    if (!walletAddress) return alert("Connect your wallet first!");
+    if (!walletAddress) return alert("connect your wallet first!");
     setMintLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/mint", {
@@ -118,7 +117,7 @@ export default function CourseDetail() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Minting failed");
+      if (!res.ok) throw new Error(data.error || "minting failed");
       setMintResult(data);
     } catch (err) {
       alert(err.message);
@@ -131,7 +130,7 @@ export default function CourseDetail() {
     <div className="min-h-screen bg-gray-100 p-10">
       <h1 className="text-3xl font-bold mb-4">{title}</h1>
 
-      {/* Progress Bar */}
+      {/* progress bar */}
       <div className="w-full bg-gray-300 rounded-full h-3 mb-8">
         <div
           className="bg-indigo-600 h-3 rounded-full transition-all duration-300"
@@ -139,13 +138,11 @@ export default function CourseDetail() {
         />
       </div>
 
-      {/* AI Tutor Section */}
       <div className="bg-white p-6 rounded-xl shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">
           Lesson {currentIndex + 1}: {currentLesson}
         </h2>
 
-        {/* Chat Window */}
         <div className="h-72 overflow-y-auto bg-gray-100 p-4 rounded-lg mb-4">
           {messages.length === 0 && (
             <p className="text-gray-500">Ask AI anything about this lesson...</p>
@@ -161,7 +158,6 @@ export default function CourseDetail() {
           {loading && <p className="text-gray-500">AI is thinking...</p>}
         </div>
 
-        {/* Input Section */}
         <div className="flex gap-3">
           <input
             type="text"
@@ -175,7 +171,6 @@ export default function CourseDetail() {
           </button>
         </div>
 
-        {/* Quiz Button */}
         <div className="mt-6 text-right">
           <button
             onClick={() => setShowQuiz(true)}
@@ -186,7 +181,6 @@ export default function CourseDetail() {
         </div>
       </div>
 
-      {/* Quiz Modal */}
       {showQuiz && (
         <div className="bg-white rounded-2xl shadow-2xl relative overflow-hidden">
           <button
@@ -196,7 +190,6 @@ export default function CourseDetail() {
             ✕ Close Quiz
           </button>
 
-          {/* ✅ UPDATED QUIZ COMPONENT HANDSHAKE HERE */}
           <QuizComponent
             courseTitle={title}
             walletAddress={walletAddress}
@@ -205,49 +198,47 @@ export default function CourseDetail() {
         </div>
       )}
 
-      {/* NFT Certificate Section */}
-      {true && (
-        <div className="bg-blue-900 p-8 rounded-3xl shadow-2xl text-white text-center mt-10">
-          <h2 className="text-3xl font-black mb-4">Claim Your Certificate 🏆</h2>
+      {/* nft certificate section */}
+      <div className="bg-blue-900 p-8 rounded-3xl shadow-2xl text-white text-center mt-10">
+        <h2 className="text-3xl font-black mb-4">Claim Your Certificate</h2>
 
-          {!walletAddress ? (
+        {!walletAddress ? (
+          <button
+            onClick={connectWallet}
+            className="bg-white text-blue-900 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all mx-auto"
+          >
+            Connect Phantom Wallet
+          </button>
+        ) : !mintResult ? (
+          <div>
+            <p className="mb-4 text-blue-200">
+              Ready to mint for: <span className="font-mono bg-blue-800 px-2 py-1 rounded">
+                {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
+              </span>
+            </p>
             <button
-              onClick={connectWallet}
-              className="bg-white text-blue-900 px-8 py-4 rounded-xl font-bold hover:bg-blue-50 transition-all mx-auto"
+              onClick={handleMint}
+              disabled={mintLoading}
+              className={`w-full max-w-sm py-4 rounded-xl font-black text-xl shadow-lg transition-all ${mintLoading ? "bg-gray-500" : "bg-green-500 hover:bg-green-400"
+                }`}
             >
-              Connect Phantom Wallet
+              {mintLoading ? "Processing..." : "Mint NFT Certificate"}
             </button>
-          ) : !mintResult ? (
-            <div>
-              <p className="mb-4 text-blue-200">
-                Ready to mint for: <span className="font-mono bg-blue-800 px-2 py-1 rounded">
-                  {walletAddress.slice(0, 4)}...{walletAddress.slice(-4)}
-                </span>
-              </p>
-              <button
-                onClick={handleMint}
-                disabled={mintLoading}
-                className={`w-full max-w-sm py-4 rounded-xl font-black text-xl shadow-lg transition-all ${mintLoading ? "bg-gray-500" : "bg-green-500 hover:bg-green-400"
-                  }`}
-              >
-                {mintLoading ? "Processing..." : "Mint NFT Certificate"}
-              </button>
-            </div>
-          ) : (
-            <div className="bg-blue-800 p-6 rounded-2xl">
-              <p className="text-green-400 font-bold text-xl mb-2">Successfully Minted!</p>
-              <a
-                href={mintResult.explorerLink}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-300 underline text-sm"
-              >
-                View Transaction on Solana Explorer ↗
-              </a>
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        ) : (
+          <div className="bg-blue-800 p-6 rounded-2xl">
+            <p className="text-green-400 font-bold text-xl mb-2">Successfully Minted!</p>
+            <a
+              href={mintResult.explorerLink}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-300 underline text-sm"
+            >
+              View Transaction on Solana Explorer ↗
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

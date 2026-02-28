@@ -10,7 +10,7 @@ const QuizComponent = ({ courseTitle, walletAddress, onPass }) => {
 
     const API_BASE = "http://localhost:5000/api/quiz";
 
-    // 1. Fetch Questions
+    // fetch quiz questions from the api
     useEffect(() => {
         const fetchQuiz = async () => {
             try {
@@ -33,7 +33,7 @@ const QuizComponent = ({ courseTitle, walletAddress, onPass }) => {
         fetchQuiz();
     }, [courseTitle]);
 
-    // 2. Handle Radio Selection
+    // update state when a user selects an option
     const handleOptionChange = (questionIndex, selectedOption) => {
         setUserAnswers({
             ...userAnswers,
@@ -41,10 +41,9 @@ const QuizComponent = ({ courseTitle, walletAddress, onPass }) => {
         });
     };
 
-    // 3. Submit Logic
+    // submit answers and check results
     const handleSubmit = async () => {
         setSubmitting(true);
-        // Convert object to array in correct order
         const answersArray = questions.map((_, index) => userAnswers[index]);
 
         try {
@@ -66,13 +65,12 @@ const QuizComponent = ({ courseTitle, walletAddress, onPass }) => {
         }
     };
 
-    // Validation: Check if all questions are answered
     const isComplete = questions.length > 0 && Object.keys(userAnswers).length === questions.length;
 
     if (loading) return <div className="p-10 text-center text-blue-600 font-bold">Loading Quiz...</div>;
     if (error) return <div className="p-10 text-center text-red-500 font-bold">Error: {error}</div>;
 
-    // 4. Result View
+    // display results after submission
     if (result) {
         return (
             <div className="max-w-2xl mx-auto mt-10 p-8 bg-white border-2 border-blue-100 rounded-2xl shadow-xl text-center">
@@ -102,7 +100,6 @@ const QuizComponent = ({ courseTitle, walletAddress, onPass }) => {
         );
     }
 
-    // 5. Quiz Questions View
     return (
         <div className="max-w-3xl mx-auto my-10 p-6">
             <header className="mb-8 border-b border-blue-100 pb-4">
